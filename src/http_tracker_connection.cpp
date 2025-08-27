@@ -40,6 +40,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/config.hpp"
 #include "libtorrent/socket_io.hpp"
 
+#include <iostream>
 #include <string>
 #include <functional>
 #include <vector>
@@ -311,16 +312,24 @@ namespace libtorrent {
 		auto const ls = bind_socket();
 		if (ls.get() != nullptr)
 		{
+			std::cerr << "HITHERE list of endpoints to announce" << std::endl;
 			endpoints.erase(std::remove_if(endpoints.begin(), endpoints.end()
-				, [&](tcp::endpoint const& ep) { return !ls.can_route(ep.address()); })
+				, [&](tcp::endpoint const& ep) { 
+					std::cerr << "    endpoint address=" << ep.address() << " interface=" << ls.device() << " local address=" << ls.get_local_endpoint() << std::endl;
+					  return !ls.can_route(ep.address()); 
+				  })
 				, endpoints.end());
 		}
 
 		if (endpoints.empty())
 		{
+			std::cerr << "HITHERE announce skipped because cannot route to any endpoints from interface=" <<  ls.device() << " local address=" << ls.get_local_endpoint() << std::endl;
+
 			fail(lt::errors::announce_skipped, operation_t::get_interface);
 			return;
 		}
+
+		std::cerr << "HITHERE announcing from interface=" <<  ls.device() << " local address=" << ls.get_local_endpoint() << std::endl;
 
 		aux::session_settings const& settings = m_man.settings();
 		bool const ssrf_mitigation = settings.get_bool(settings_pack::ssrf_mitigation);
